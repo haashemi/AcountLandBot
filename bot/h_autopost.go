@@ -74,7 +74,6 @@ type ItemShopItem struct {
 
 func (main *rawTracker) Start() {
 	log.Info("Tracker >> Started")
-	main.CheckForUpdates()
 	for range time.NewTicker(time.Second * 15).C {
 		log.Info("tracking itemshop...")
 		main.CheckForUpdates()
@@ -113,7 +112,6 @@ func (main *rawTracker) CheckForUpdates() {
 		}
 		main.PostUpdate(buf, index+1, len(itemShopTabs), generateTime)
 	}
-
 }
 
 func (main *rawTracker) GenerateImage(items []ItemShopItem) image.Image {
@@ -220,7 +218,7 @@ func (main *rawTracker) PostUpdateAlert(itemShopTabs int) {
 	)
 
 	if err == nil && post != nil {
-		main.client.GetRawClient().PinChatMessage(
+		defer main.client.GetRawClient().PinChatMessage(
 			global.Config.Itemshop.Channel,
 			post.GetID(), false, false,
 		)
