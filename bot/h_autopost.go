@@ -74,13 +74,14 @@ type ItemShopItem struct {
 
 func (main *rawTracker) Start() {
 	log.Info("Tracker >> Started")
+	main.CheckForUpdates(false, global.Config.Itemshop.Channel)
 	for range time.NewTicker(time.Second * 15).C {
 		log.Info("tracking itemshop...")
-		main.CheckForUpdates()
+		main.CheckForUpdates(false, global.Config.Itemshop.Channel)
 	}
 }
 
-func (main *rawTracker) CheckForUpdates() {
+func (main *rawTracker) CheckForUpdates(forcePost bool, target int64) {
 	main.mut.Lock()
 	defer main.mut.Unlock()
 
@@ -90,15 +91,20 @@ func (main *rawTracker) CheckForUpdates() {
 		log.Error("Tracker >> S: %d >> Err: %v", statusCode, err)
 	} else if err = json.Unmarshal(rawData, &data); err != nil {
 		log.Error("Tracker >> Err: %s", err.Error())
-	} else if newHash := deephash.Hash(data); bytes.Equal(newHash, main.shopHash) {
+	} else if newHash := deephash.Hash(data); bytes.Equal(newHash, main.shopHash) && !forcePost {
 		return
 	} else {
+		oldHash := main.shopHash
 		main.shopHash = newHash
+
+		if bytes.Equal(oldHash, []byte{}) && !forcePost {
+			return
+		}
 	}
 
 	items := append(data.Data.Featured.Entries, data.Data.Daily.Entries...)
 	itemShopTabs := splitSlice(items, 12)
-	main.PostUpdateAlert(len(itemShopTabs))
+	main.PostUpdateAlert(len(itemShopTabs), target)
 
 	for index, tabItems := range itemShopTabs {
 		start := time.Now()
@@ -110,7 +116,7 @@ func (main *rawTracker) CheckForUpdates() {
 			log.Error(err.Error())
 			continue
 		}
-		main.PostUpdate(buf, index+1, len(itemShopTabs), generateTime)
+		main.PostUpdate(buf, index+1, len(itemShopTabs), generateTime, target)
 	}
 }
 
@@ -205,9 +211,9 @@ func (main *rawTracker) GenerateIcon(mainImage draw.Image, item ItemShopItem, st
 	llamaimage.Write(mainImage, priceTomans, color.White, fontFace, startX+290-margin, startY+342)
 }
 
-func (main *rawTracker) PostUpdateAlert(itemShopTabs int) {
+func (main *rawTracker) PostUpdateAlert(itemShopTabs int, target int64) {
 	post, err := main.client.SendMessage(
-		global.Config.Itemshop.Channel,
+		target,
 		main.client.HTML(fmt.Sprintf(
 			"✅| <b>ITEMSHOP UPATED!</b>\n\n"+
 				"📊| <i>TABS COUNT:</i> <code>%d</code>\n"+
@@ -218,17 +224,15 @@ func (main *rawTracker) PostUpdateAlert(itemShopTabs int) {
 	)
 
 	if err == nil && post != nil {
-		defer main.client.GetRawClient().PinChatMessage(
-			global.Config.Itemshop.Channel,
-			post.GetID(), false, false,
-		)
+		defer main.client.GetRawClient().PinChatMessage(target, post.GetID(), false, false)
 	}
 }
 
-func (main *rawTracker) PostUpdate(reader io.Reader, tabCount, allTabsCount int, generateTime time.Duration) {
+func (main *rawTracker) PostUpdate(reader io.Reader, tabCount, allTabsCount int, generateTime time.Duration, target int64) {
 	doc := gogram.FileFromReaderWithPattern(reader, "AccountLand-*.png")
+
 	main.client.SendMessage(
-		global.Config.Itemshop.Channel,
+		target,
 		gogram.Document(
 			doc, nil, gogram.Text(fmt.Sprintf(
 				"> Tab %d/%d\nGenerated in: %v",
@@ -236,6 +240,7 @@ func (main *rawTracker) PostUpdate(reader io.Reader, tabCount, allTabsCount int,
 			)), false,
 		),
 	)
+
 	doc.Dispose()
 }
 

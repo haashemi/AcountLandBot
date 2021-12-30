@@ -12,11 +12,20 @@ import (
 
 func registerCommands(client *gogram.Client, usrename string) {
 	client.OnNewMessage(filters.And(filters.IsPrivate(), filters.Or(isSuperUser(), isAdmin()), filters.Command("/", usrename, "setPrice")), onSetPrice)
+	client.OnNewMessage(filters.And(filters.IsPrivate(), filters.Or(isSuperUser(), isAdmin()), filters.Command("/", usrename, "forcePost")), onForcePost)
 }
 
 func onSetPrice(msg *gogram.Message, c *gogram.Client) {
 	caption := strings.SplitN(msg.GetCaption(), " ", 2)
 	if len(caption) != 2 {
+		msg.Send(c.HTML(
+			"✅| <b>Set Price command</b>\n\n" +
+				"— <b>Arguments:</b>\n" +
+				"—— <i>Price/V-Bucks</i> <code>(number)</code>\n\n" +
+				"— <b>Example:</b>\n" +
+				"—— <code>/setPrice 120</code>\n\n" +
+				"🔥| <i>Developed by Seyyed</i>",
+		))
 		return
 	}
 
@@ -49,4 +58,27 @@ func onSetPrice(msg *gogram.Message, c *gogram.Client) {
 		1600*newPrice,
 		2000*newPrice,
 	)))
+}
+
+func onForcePost(msg *gogram.Message, c *gogram.Client) {
+	caption := strings.SplitN(msg.GetCaption(), " ", 2)
+	if len(caption) != 2 {
+		msg.Send(c.HTML(
+			"✅| <b>Force Post command</b>\n\n" +
+				"— <b>Arguments:</b>\n" +
+				"—— <i>Target Chat</i>: <code>here / channel</code>\n\n" +
+				"— <b>Example:</b>\n" +
+				"—— <code>/forcePost here</code>\n" +
+				"—— <code>/forcePost channel</code>\n\n" +
+				"🔥| <i>Developed by Seyyed</i>",
+		))
+		return
+	}
+
+	switch strings.ToLower(caption[1]) {
+	case "here":
+		tracker.CheckForUpdates(true, msg.SenderID())
+	case "channel":
+		tracker.CheckForUpdates(true, global.Config.Itemshop.Channel)
+	}
 }
