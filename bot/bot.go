@@ -61,7 +61,7 @@ func isAdmin() *filters.FuncFilter {
 	return filters.NewFuncFilter(func(update td.Update) bool {
 		if data, ok := update.(*td.UpdateNewMessage); ok {
 			if sender, ok := data.Message.SenderID.(*td.MessageSenderUser); ok {
-				for _, ownerID := range global.Config.TelegramBot.SuperUsers {
+				for _, ownerID := range global.Config.TelegramBot.Admins {
 					if sender.UserID == ownerID {
 						return true
 					}
