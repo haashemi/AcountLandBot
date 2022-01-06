@@ -30,7 +30,8 @@ type rawTracker struct {
 }
 
 type ItemShopData struct {
-	Data struct {
+	Status int `json:"status"`
+	Data   struct {
 		Featured struct {
 			Entries []ItemShopItem `json:"entries"`
 		} `json:"featured"`
@@ -91,6 +92,8 @@ func (main *rawTracker) CheckForUpdates(forcePost bool, target int64) {
 		log.Error("Tracker >> S: %d >> Err: %v", statusCode, err)
 	} else if err = json.Unmarshal(rawData, &data); err != nil {
 		log.Error("Tracker >> Err: %s", err.Error())
+	} else if data.Status != 200 {
+		return
 	} else if newHash := deephash.Hash(data); bytes.Equal(newHash, main.shopHash) && !forcePost {
 		return
 	} else {
