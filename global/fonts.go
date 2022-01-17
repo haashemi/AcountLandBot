@@ -11,8 +11,12 @@ var Fonts rawFonts
 //go:embed assets/fonts/burbank.ttf
 var burbank []byte
 
+//go:embed assets/fonts/Kalameh-Bold.ttf
+var KalamehBold []byte
+
 type rawFonts struct {
-	Burbank *llamaimage.LlamaFont
+	Burbank     *llamaimage.LlamaFont
+	KalamehBold *llamaimage.LlamaFont
 }
 
 func loadFonts() rawFonts {
@@ -21,6 +25,10 @@ func loadFonts() rawFonts {
 	fontFace, err := llamaimage.OpenFont(burbank)
 	checkErr(err)
 	data.Burbank = fontFace
+
+	fontFace, err = llamaimage.OpenFont(KalamehBold)
+	checkErr(err)
+	data.KalamehBold = fontFace
 
 	return data
 }

@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/LlamaNite/llamaimage"
+	"github.com/abdullahdiaa/garabic"
 	"github.com/davegardnerisme/deephash"
 	"golang.org/x/text/message"
 )
@@ -90,9 +91,9 @@ func (main *rawTracker) CheckForUpdates(forcePost bool, target int64) {
 	statusCode, rawData, err := llamahttp.Get("https://fortnite-api.com/v2/shop/br/combined", nil, nil)
 	if err != nil || statusCode != 200 {
 		log.Error("Tracker >> S: %d >> Err: %v", statusCode, err)
+		return
 	} else if err = json.Unmarshal(rawData, &data); err != nil {
 		log.Error("Tracker >> Err: %s", err.Error())
-	} else if data.Status != 200 {
 		return
 	} else if newHash := deephash.Hash(data); bytes.Equal(newHash, main.shopHash) && !forcePost {
 		return
@@ -164,9 +165,9 @@ func (main *rawTracker) GenerateIcon(mainImage draw.Image, item ItemShopItem, st
 		}
 	}
 
-	var name, iconURL string
+	var iconURL string //name,
 	if len(item.Items) > 0 {
-		name = item.Items[0].Name
+		// name = item.Items[0].Name
 
 		if iconURL = item.Items[0].Images.Featured; iconURL == "" {
 			if iconURL = item.Items[0].Images.Icon; iconURL == "" {
@@ -176,7 +177,7 @@ func (main *rawTracker) GenerateIcon(mainImage draw.Image, item ItemShopItem, st
 	}
 
 	if item.Bundle != nil {
-		name = item.Bundle.Name
+		// name = item.Bundle.Name
 		iconURL = item.Bundle.Image
 	}
 
@@ -192,26 +193,43 @@ func (main *rawTracker) GenerateIcon(mainImage draw.Image, item ItemShopItem, st
 	}
 
 	// NAME
-	if len(name) > 0 {
-		fontFace, textWidth := global.Fonts.Burbank.FitTextWidth(name, 33, 290-20)
-		llamaimage.Write(mainImage, name, color.Black, fontFace, startX+((290-textWidth)/2), startY+297)
-	}
+	// if len(name) > 0 {
+	// 	fontFace, textWidth := global.Fonts.Burbank.FitTextWidth(name, 33, 290-20)
+	// 	llamaimage.Write(mainImage, name, color.Black, fontFace, startX+((290-textWidth)/2), startY+297)
+	// }
 
-	fontFace := global.Fonts.Burbank.NewFace(20)
+	priceFont := global.Fonts.Burbank.NewFace(27)
+	priceTypeFont := global.Fonts.KalamehBold.NewFace(23)
 	printPrice := message.NewPrinter(message.MatchLanguage("en")).Sprintf
 
+	// RialsPrice Legal
+	priceTomans := printPrice("%d T", item.FinalPrice*global.Config.Itemshop.PriceIllegal)
+	llamaimage.Write(mainImage, priceTomans, color.Black, priceFont, startX+10, startY+295)
+
+	priceType := garabic.Shape("نيمه قانوني")
+	margin := global.Fonts.KalamehBold.GetWidth(23, priceType) + 10
+	llamaimage.Write(mainImage, priceType, color.Black, priceTypeFont, startX+287-margin, startY+286)
+
+	// RialsPrice Illegal
+	priceTomans = printPrice("%d T", item.FinalPrice*global.Config.Itemshop.PriceLegal)
+	llamaimage.Write(mainImage, priceTomans, color.White, priceFont, startX+10, startY+333)
+
+	priceType = garabic.Shape("قانوني")
+	margin = global.Fonts.KalamehBold.GetWidth(23, priceType) + 10
+	llamaimage.Write(mainImage, priceType, color.White, priceTypeFont, startX+287-margin, startY+324)
+
 	// MainPrice
-	if icon, err := global.GetImage("icon-vbucks"); err == nil {
-		icon = llamaimage.Resize(icon, 30, 30, llamaimage.ResizeFit)
-		llamaimage.Paste(mainImage, icon, startX+7, startY+335)
-	}
-	priceVBucks := printPrice("%d", item.FinalPrice)
-	llamaimage.Write(mainImage, priceVBucks, color.White, fontFace, startX+44, startY+342)
+	// if icon, err := global.GetImage("icon-vbucks"); err == nil {
+	// 	icon = llamaimage.Resize(icon, 30, 30, llamaimage.ResizeFit)
+	// 	llamaimage.Paste(mainImage, icon, startX+7, startY+335)
+	// }
+	// priceVBucks := printPrice("%d", item.FinalPrice)
+	// llamaimage.Write(mainImage, priceVBucks, color.White, fontFace, startX+44, startY+342)
 
 	// RialsPrice
-	priceTomans := printPrice("%d T", item.FinalPrice*global.Config.Itemshop.Price)
-	margin := global.Fonts.Burbank.GetWidth(20, priceTomans) + 10
-	llamaimage.Write(mainImage, priceTomans, color.White, fontFace, startX+290-margin, startY+342)
+	// priceTomans := printPrice("%d T", item.FinalPrice*global.Config.Itemshop.PriceLegal)
+	// margin := global.Fonts.Burbank.GetWidth(20, priceTomans) + 10
+	// llamaimage.Write(mainImage, priceTomans, color.White, fontFace, startX+290-margin, startY+342)
 }
 
 func (main *rawTracker) PostUpdateAlert(itemShopTabs int, target int64) {
@@ -293,10 +311,14 @@ func fillGradient(img draw.Image, startColor, endColor color.RGBA, startX, endX,
 			if rowP > 1 && rowP < row-2 { // 2px from left and right
 				if columnP < 2 { // 2px from top
 					img.Set(startX+rowP, startY+columnP, color.RGBA{uint8(R), uint8(G), uint8(B), uint8(A)})
-				} else if columnP > column-83 && columnP < column-38 {
-					img.Set(startX+rowP, startY+columnP, color.White) //RGBA{144, 173, 216, 255}
-				} else if columnP > column-38 && columnP < column-3 {
+				} else if columnP > column-83 && columnP <= column-43 {
+					img.Set(startX+rowP, startY+columnP, color.White)
+				} else if columnP > column-43 && columnP < column-3 {
 					img.Set(startX+rowP, startY+columnP, color.Black)
+					// } else if columnP > column-83 && columnP < column-38 {
+					// img.Set(startX+rowP, startY+columnP, color.White) //RGBA{144, 173, 216, 255}
+					// } else if columnP > column-38 && columnP < column-3 {
+					// 	img.Set(startX+rowP, startY+columnP, color.Black)
 				} else if columnP > column-3 { // 2px from bottom
 					img.Set(startX+rowP, startY+columnP, color.RGBA{uint8(R), uint8(G), uint8(B), uint8(A)})
 				}

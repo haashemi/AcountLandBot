@@ -20,8 +20,9 @@ type rawConfig struct {
 	} `yaml:"TelegramBot"`
 
 	Itemshop struct {
-		Channel int64 `yaml:"Channel"`
-		Price   int   `yaml:"Price"`
+		Channel      int64 `yaml:"Channel"`
+		PriceLegal   int   `yaml:"PriceLegal"`
+		PriceIllegal int   `yaml:"PriceIllegal"`
 	} `yaml:"Itemshop"`
 
 	Colors struct {
