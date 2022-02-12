@@ -12,7 +12,7 @@ TelegramBot:
 Itemshop:
   Channel: -1001606477591
   PriceLegal: 140
-  PriceIllegal: 120
+  PriceIllegal: 85
 
 Colors:
   DefaultBackground:
