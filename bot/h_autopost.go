@@ -13,6 +13,7 @@ import (
 	"image/draw"
 	"io"
 	"math"
+	"net/http"
 	"sync"
 	"time"
 
@@ -45,33 +46,20 @@ type ItemShopData struct {
 
 type ItemShopItem struct {
 	FinalPrice int `json:"finalPrice"`
-	Bundle     *struct {
-		Name  string `json:"name"`
-		Image string `json:"image"`
-	} `json:"bundle,omitempty"`
-	NewDisplayAsset struct {
-		MaterialInstances []struct {
-			Images struct {
-				OfferImage string `json:"OfferImage"`
-				Background string `json:"Background"`
-			} `json:"images"`
-		} `json:"materialInstances"`
-	} `json:"newDisplayAsset"`
-	Items []struct {
-		Name        string      `json:"name"`
-		ShopHistory []time.Time `json:"shopHistory"`
-		Rarity      struct {
-			Value string `json:"value"`
-		} `json:"rarity"`
-		Images struct {
-			SmallIcon string `json:"smallIcon"`
-			Icon      string `json:"icon"`
-			Featured  string `json:"featured"`
-		} `json:"images"`
+	Bundle     any `json:"bundle,omitempty"`
+	Items      []struct {
 		Type struct {
 			Value string `json:"value"`
 		} `json:"type"`
 	} `json:"items"`
+	NewDisplayAsset struct {
+		MaterialInstances []struct {
+			ID     string `json:"id"`
+			Images struct {
+				Background string `json:"Background"`
+			} `json:"images"`
+		} `json:"materialInstances"`
+	} `json:"newDisplayAsset"`
 }
 
 func (main *rawTracker) Start() {
@@ -87,14 +75,19 @@ func (main *rawTracker) CheckForUpdates(forcePost bool, target int64) {
 	main.mut.Lock()
 	defer main.mut.Unlock()
 
-	data := ItemShopData{}
-	statusCode, rawData, err := llamahttp.Get("https://fortnite-api.com/v2/shop/br/combined", nil, nil)
-	if err != nil || statusCode != 200 {
-		log.Error("Tracker >> S: %d >> Err: %v", statusCode, err)
-		return
-	} else if err = json.Unmarshal(rawData, &data); err != nil {
+	resp, err := llamahttp.Do(http.MethodGet, "https://fortnite-api.com/v2/shop/br/combined", llamahttp.Options{})
+	if err != nil {
 		log.Error("Tracker >> Err: %s", err.Error())
 		return
+	}
+	defer resp.Body.Close()
+
+	data := ItemShopData{}
+	if resp.StatusCode != http.StatusOK {
+		log.Error("Tracker >> StatusCode: %d", resp.StatusCode)
+		return
+	} else if json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		log.Error("Tracker >> DecoderErr: %s", err.Error())
 	} else if newHash := deephash.Hash(data); bytes.Equal(newHash, main.shopHash) && !forcePost {
 		return
 	} else {
@@ -128,7 +121,7 @@ func (main *rawTracker) GenerateImage(items []ItemShopItem) image.Image {
 	mainImage := llamaimage.NewImage(1080, 1920)
 
 	if bg, err := global.GetImage("background"); err != nil {
-		llamaimage.FillGradient(mainImage, global.Colors.Background.Start, global.Colors.Background.End, llamaimage.GradientOrientationVertical)
+		llamaimage.FillGradient(mainImage, global.Colors.DefaultBackground.Start, global.Colors.DefaultBackground.End, llamaimage.GradientOrientationVertical)
 	} else {
 		llamaimage.Paste(mainImage, bg, 0, 0)
 	}
@@ -149,8 +142,16 @@ func (main *rawTracker) GenerateImage(items []ItemShopItem) image.Image {
 }
 
 func (main *rawTracker) GenerateIcon(mainImage draw.Image, item ItemShopItem, startX, startY int) {
-	// IconRes:  290 - 370
-	// Base X-Y:  75 - 215
+	if instances := item.NewDisplayAsset.MaterialInstances; len(instances) > 0 {
+		iconURL := instances[0].Images.Background
+		img, err := llamahttp.GetImage(instances[0].ID, iconURL)
+		if err != nil {
+			log.Error("failed to fetch {%s} icon > %s", instances[0].ID, err.Error())
+		} else {
+			img = llamaimage.Resize(img, 286, 286, llamaimage.ResizeFit)
+			llamaimage.Paste(mainImage, img, startX+2, startY+2)
+		}
+	}
 
 	// TEMP
 	cA, err := llamaimage.HexToRGBA("#0091fa")
@@ -164,39 +165,6 @@ func (main *rawTracker) GenerateIcon(mainImage draw.Image, item ItemShopItem, st
 			)
 		}
 	}
-
-	var iconURL string //name,
-	if len(item.Items) > 0 {
-		// name = item.Items[0].Name
-
-		if iconURL = item.Items[0].Images.Featured; iconURL == "" {
-			if iconURL = item.Items[0].Images.Icon; iconURL == "" {
-				iconURL = item.Items[0].Images.SmallIcon
-			}
-		}
-	}
-
-	if item.Bundle != nil {
-		// name = item.Bundle.Name
-		iconURL = item.Bundle.Image
-	}
-
-	instances := item.NewDisplayAsset.MaterialInstances
-	if len(instances) > 0 {
-		iconURL = instances[0].Images.Background
-	}
-
-	icon, err := llamahttp.GetImage(iconURL)
-	if err == nil {
-		icon = llamaimage.Resize(icon, 280+6, 280+6, llamaimage.ResizeFit)
-		llamaimage.Paste(mainImage, icon, startX+2, startY+2)
-	}
-
-	// NAME
-	// if len(name) > 0 {
-	// 	fontFace, textWidth := global.Fonts.Burbank.FitTextWidth(name, 33, 290-20)
-	// 	llamaimage.Write(mainImage, name, color.Black, fontFace, startX+((290-textWidth)/2), startY+297)
-	// }
 
 	priceFont := global.Fonts.Burbank.NewFace(27)
 	priceTypeFont := global.Fonts.KalamehBold.NewFace(23)
@@ -217,26 +185,13 @@ func (main *rawTracker) GenerateIcon(mainImage draw.Image, item ItemShopItem, st
 	priceType = garabic.Shape("قانوني")
 	margin = global.Fonts.KalamehBold.GetWidth(23, priceType) + 10
 	llamaimage.Write(mainImage, priceType, color.White, priceTypeFont, startX+287-margin, startY+324)
-
-	// MainPrice
-	// if icon, err := global.GetImage("icon-vbucks"); err == nil {
-	// 	icon = llamaimage.Resize(icon, 30, 30, llamaimage.ResizeFit)
-	// 	llamaimage.Paste(mainImage, icon, startX+7, startY+335)
-	// }
-	// priceVBucks := printPrice("%d", item.FinalPrice)
-	// llamaimage.Write(mainImage, priceVBucks, color.White, fontFace, startX+44, startY+342)
-
-	// RialsPrice
-	// priceTomans := printPrice("%d T", item.FinalPrice*global.Config.Itemshop.PriceLegal)
-	// margin := global.Fonts.Burbank.GetWidth(20, priceTomans) + 10
-	// llamaimage.Write(mainImage, priceTomans, color.White, fontFace, startX+290-margin, startY+342)
 }
 
 func (main *rawTracker) PostUpdateAlert(itemShopTabs int, target int64) {
 	post, err := main.client.SendMessage(
 		target,
 		main.client.HTML(fmt.Sprintf(
-			"✅| <b>ITEMSHOP UPATED!</b>\n\n"+
+			"✅| <b>ITEMSHOP UPDATED!</b>\n\n"+
 				"📊| <i>TABS COUNT:</i> <code>%d</code>\n"+
 				"🧬| <i>HASH:</i> <code>%s</code>\n\n"+
 				"🔥| <i>developed by Seyyed</i>",
@@ -252,7 +207,9 @@ func (main *rawTracker) PostUpdateAlert(itemShopTabs int, target int64) {
 func (main *rawTracker) PostUpdate(reader io.Reader, tabCount, allTabsCount int, generateTime time.Duration, target int64) {
 	doc := gogram.FileFromReaderWithPattern(reader, "AccountLand-*.png")
 
-	main.client.SendMessage(
+	main.client.GetRawClient().GetChat(target)
+
+	_, err := main.client.SendMessage(
 		target,
 		gogram.Document(
 			doc, nil, gogram.Text(fmt.Sprintf(
@@ -261,6 +218,9 @@ func (main *rawTracker) PostUpdate(reader io.Reader, tabCount, allTabsCount int,
 			)), false,
 		),
 	)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	doc.Dispose()
 }

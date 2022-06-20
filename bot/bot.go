@@ -36,6 +36,10 @@ func Run() {
 	go tracker.Start()
 	registerCommands(client, info.Username)
 
+	// Get channel to make sure about the config file
+	client.GetRawClient().GetChat(global.Config.Itemshop.Channel)
+	log.Info("Chat %d fetched", global.Config.Itemshop.Channel)
+
 	// Start polling with ignoring updates.
 	time.Sleep(time.Second)
 	log.Info("Bot is online as %s", info.Username)

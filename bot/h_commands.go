@@ -10,10 +10,10 @@ import (
 	"golang.org/x/text/message"
 )
 
-func registerCommands(client *gogram.Client, usrename string) {
-	client.OnNewMessage(filters.And(filters.IsPrivate(), filters.Or(isSuperUser(), isAdmin()), filters.Command("/", usrename, "setPrice")), onSetPrice)
-	client.OnNewMessage(filters.And(filters.IsPrivate(), filters.Or(isSuperUser(), isAdmin()), filters.Command("/", usrename, "setPriceIllegal")), onSetPriceIllegal)
-	client.OnNewMessage(filters.And(filters.IsPrivate(), filters.Or(isSuperUser(), isAdmin()), filters.Command("/", usrename, "forcePost")), onForcePost)
+func registerCommands(client *gogram.Client, username string) {
+	client.OnNewMessage(filters.And(filters.IsPrivate(), filters.Or(isSuperUser(), isAdmin()), filters.Command("/", username, "setPrice")), onSetPrice)
+	client.OnNewMessage(filters.And(filters.IsPrivate(), filters.Or(isSuperUser(), isAdmin()), filters.Command("/", username, "setPriceIllegal")), onSetPriceIllegal)
+	client.OnNewMessage(filters.And(filters.IsPrivate(), filters.Command("/", username, "forcePost")), onForcePost)
 }
 
 func onSetPrice(msg *gogram.Message, c *gogram.Client) {
@@ -65,7 +65,7 @@ func onSetPriceIllegal(msg *gogram.Message, c *gogram.Client) {
 	caption := strings.SplitN(msg.GetCaption(), " ", 2)
 	if len(caption) != 2 {
 		msg.Send(c.HTML(
-			"✅| <b>Set Nime Legal Price command</b>\n\n" +
+			"✅| <b>Set Half Legal Price command</b>\n\n" +
 				"— <b>Arguments:</b>\n" +
 				"—— <i>Price/V-Bucks</i> <code>(number)</code>\n\n" +
 				"— <b>Example:</b>\n" +
@@ -86,7 +86,7 @@ func onSetPriceIllegal(msg *gogram.Message, c *gogram.Client) {
 	}
 
 	msg.Send(c.HTML(message.NewPrinter(message.MatchLanguage("en")).Sprintf(
-		"✅| <b>Nime Legal PRICES UPDATED</b>\n\n"+
+		"✅| <b>Half Legal PRICES UPDATED</b>\n\n"+
 			"— V-Bucks — Tomans\n"+
 			"💵| <code>200V — %dT</code>\n"+
 			"💵| <code>500V — %dT</code>\n"+
