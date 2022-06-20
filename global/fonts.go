@@ -6,29 +6,29 @@ import (
 	"github.com/LlamaNite/llamaimage"
 )
 
-var Fonts rawFonts
-
 //go:embed assets/fonts/burbank.ttf
 var burbank []byte
 
 //go:embed assets/fonts/Kalameh-Bold.ttf
 var KalamehBold []byte
 
-type rawFonts struct {
+type fonts struct {
 	Burbank     *llamaimage.LlamaFont
 	KalamehBold *llamaimage.LlamaFont
 }
 
-func loadFonts() rawFonts {
-	data := rawFonts{}
-
+func loadFonts(data *fonts) error {
 	fontFace, err := llamaimage.OpenFont(burbank)
-	checkErr(err)
+	if err != nil {
+		return err
+	}
 	data.Burbank = fontFace
 
 	fontFace, err = llamaimage.OpenFont(KalamehBold)
-	checkErr(err)
+	if err != nil {
+		return err
+	}
 	data.KalamehBold = fontFace
 
-	return data
+	return nil
 }

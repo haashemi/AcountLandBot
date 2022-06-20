@@ -1,27 +1,83 @@
 package global
 
 import (
+	_ "embed"
 	"image/color"
 
 	"github.com/LlamaNite/llamaimage"
+	"gopkg.in/yaml.v3"
 )
 
-var Colors rawColors
+//go:embed assets/colors.yaml
+var colorsConfigFile []byte
 
-type rawColors struct {
-	Background struct{ Start, End color.RGBA }
-	Rarities   map[string]struct{ Start, End, Overlay color.RGBA }
+type colors struct {
+	DefaultBackground gradientColor
+	Rarities          map[string]gradientColor
 }
 
-// ToDo: Add rarities
-func loadColors(config *rawConfig) rawColors {
-	var err error
-	data := rawColors{}
+type gradientColor struct{ Start, End, Overlay color.RGBA }
 
-	data.Background.Start, err = llamaimage.HexToRGBA(config.Colors.DefaultBackground.Start)
-	checkErr(err)
-	data.Background.End, err = llamaimage.HexToRGBA(config.Colors.DefaultBackground.End)
-	checkErr(err)
+type colorsConfig struct {
+	DefaultBackground struct {
+		Start   string `yaml:"start"`
+		End     string `yaml:"end"`
+		Overlay string `yaml:"overlay"`
+	} `yaml:"default_background"`
+	RarityColors []struct {
+		Rarity  string `yaml:"rarity"`
+		Start   string `yaml:"start"`
+		End     string `yaml:"end"`
+		Overlay string `yaml:"overlay"`
+	} `yaml:"rarity_colors"`
+}
 
-	return data
+func (main *colors) Of(rarity string) gradientColor {
+	if colorData, isExist := main.Rarities[rarity]; isExist {
+		return colorData
+	}
+	return main.DefaultBackground
+}
+
+func loadColors(data *colors) error {
+	conf := &colorsConfig{}
+	if err := yaml.Unmarshal(colorsConfigFile, conf); err != nil {
+		return err
+	}
+
+	startColor, err := llamaimage.HexToRGBA(conf.DefaultBackground.Start)
+	if err != nil {
+		return err
+	}
+	data.DefaultBackground.Start = startColor
+
+	endColor, err := llamaimage.HexToRGBA(conf.DefaultBackground.End)
+	if err != nil {
+		return err
+	}
+	data.DefaultBackground.End = endColor
+
+	data.Rarities = map[string]gradientColor{}
+	for _, colorData := range conf.RarityColors {
+		startColor, err = llamaimage.HexToRGBA(colorData.Start)
+		if err != nil {
+			return err
+		}
+		endColor, err = llamaimage.HexToRGBA(colorData.End)
+		if err != nil {
+			return err
+		}
+		overlayColor, err := llamaimage.HexToRGBA(colorData.Overlay)
+		if err != nil {
+			return err
+		}
+
+		data.Rarities[colorData.Rarity] = gradientColor{
+			Start:   startColor,
+			End:     endColor,
+			Overlay: overlayColor,
+		}
+	}
+
+	return nil
 }

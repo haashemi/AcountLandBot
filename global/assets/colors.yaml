@@ -1,0 +1,20 @@
+default_background: { start: "#302b63", end: "#0f0c29", overlay: "#2e2954" }
+
+rarity_colors:
+  - { rarity: "dark", start: "#520c6f", end: "#fb22df", overlay: "#f34ec7" }
+  - { rarity: "dc", start: "#243461", end: "#5475c7", overlay: "#007af1" }
+  - { rarity: "frozen", start: "#269ed6", end: "#94dfff", overlay: "#efffff" }
+  - { rarity: "gaminglegends", start: "#0e041b", end: "#7821c7", overlay: "#8173ee" }
+  - { rarity: "icon", start: "#256b6b", end: "#36b7b7", overlay: "#72edf2" }
+  - { rarity: "lava", start: "#6a0a31", end: "#ea8d23", overlay: "#f1cc3f" }
+  - { rarity: "marvel", start: "#761b1b", end: "#c53334", overlay: "#d81920" }
+  - { rarity: "marvel", start: "#761b1b", end: "#c53334", overlay: "#d81920" }
+  - { rarity: "shadow", start: "#191919", end: "#717171", overlay: "#fcfefb" }
+  - { rarity: "slurp", start: "#13798f", end: "#22b997", overlay: "#1df9f7" }
+  - { rarity: "starwars", start: "#081737", end: "#1b366e", overlay: "#ffd800" }
+  - { rarity: "mythic", start: "#78371d", end: "#d37841", overlay: "#fbc363" }
+  - { rarity: "legendary", start: "#78371d", end: "#d37841", overlay: "#fbc363" }
+  - { rarity: "epic", start: "#4b2483", end: "#b15be2", overlay: "#ec27ff" }
+  - { rarity: "rare", start: "#143977", end: "#49acf2", overlay: "#5cf2f3" }
+  - { rarity: "uncommon", start: "#175117", end: "#60aa3a", overlay: "#a1fe00" }
+  - { rarity: "common", start: "#646464", end: "#bebebe", overlay: "#d5d5d5" }

@@ -7,9 +7,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var Config *rawConfig
-
-type rawConfig struct {
+type config struct {
 	TelegramBot struct {
 		CachePath  string  `yaml:"CachePath"`
 		APIID      string  `yaml:"APIID"`
@@ -39,17 +37,15 @@ type rawConfig struct {
 	} `yaml:"Colors"`
 }
 
-func loadConfig() *rawConfig {
+func loadConfig(conf *config) error {
 	configBytes, err := ioutil.ReadFile("./config.yaml")
-	checkErr(err)
-
-	data := &rawConfig{}
-	checkErr(yaml.Unmarshal(configBytes, data))
-
-	return data
+	if err != nil {
+		return err
+	}
+	return yaml.Unmarshal(configBytes, conf)
 }
 
-func (data *rawConfig) UpdateConfig() error {
+func (data *config) UpdateConfig() error {
 	configBytes, err := yaml.Marshal(data)
 	if err != nil {
 		return err
