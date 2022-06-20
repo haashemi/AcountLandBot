@@ -1,89 +1,12 @@
 TelegramBot:
   CachePath: ./cache
-  APIID: "xxxx"
-  APIHash: xxxx
-  BotToken: xxxx
-  SuperUsers:
-    - 682785614
-    - 667442892
-  Admins:
-    - 561812392
+  APIID: "XXXXXXX"
+  APIHash: MyAPIHash
+  BotToken: MyBotToken
+  SuperUsers: [682785614, 667442892]
+  Admins: [561812392]
 
 Itemshop:
   Channel: -1001606477591
   PriceLegal: 140
-  PriceIllegal: 85
-
-Colors:
-  DefaultBackground:
-    Start: "#2c8ed2"
-    End: "#021396"
-  RarityColors:
-    - Rarity: dark
-      Start: "#520c6f"
-      End: "#fb22df"
-      Overlay: "#f34ec7"
-    - Rarity: dc
-      Start: "#243461"
-      End: "#5475c7"
-      Overlay: "#007af1"
-    - Rarity: frozen
-      Start: "#269ed6"
-      End: "#94dfff"
-      Overlay: "#efffff"
-    - Rarity: gaminglegends
-      Start: "#0e041b"
-      End: "#7821c7"
-      Overlay: "#8173ee"
-    - Rarity: icon
-      Start: "#256b6b"
-      End: "#36b7b7"
-      Overlay: "#72edf2"
-    - Rarity: lava
-      Start: "#6a0a31"
-      End: "#ea8d23"
-      Overlay: "#f1cc3f"
-    - Rarity: marvel
-      Start: "#761b1b"
-      End: "#c53334"
-      Overlay: "#d81920"
-    - Rarity: marvel
-      Start: "#761b1b"
-      End: "#c53334"
-      Overlay: "#d81920"
-    - Rarity: shadow
-      Start: "#191919"
-      End: "#717171"
-      Overlay: "#fcfefb"
-    - Rarity: slurp
-      Start: "#13798f"
-      End: "#22b997"
-      Overlay: "#1df9f7"
-    - Rarity: starwars
-      Start: "#081737"
-      End: "#1b366e"
-      Overlay: "#000000"
-    - Rarity: mythic
-      Start: "#78371d"
-      End: "#d37841"
-      Overlay: "#fbc363"
-    - Rarity: legendary
-      Start: "#78371d"
-      End: "#d37841"
-      Overlay: "#fbc363"
-    - Rarity: epic
-      Start: "#4b2483"
-      End: "#b15be2"
-      Overlay: "#ec27ff"
-    - Rarity: rare
-      Start: "#143977"
-      End: "#49acf2"
-      Overlay: "#5cf2f3"
-    - Rarity: uncommon
-      Start: "#175117"
-      End: "#60aa3a"
-      Overlay: "#a1fe00"
-    - Rarity: common
-      Start: "#646464"
-      End: "#bebebe"
-      Overlay: "#d5d5d5"
+  PriceIllegal: 60
