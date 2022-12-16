@@ -2,14 +2,15 @@ package bot
 
 import (
 	"accountland/global"
+	"context"
 	"fmt"
-	"gogram"
-	"gogram/bindings/td"
-	"gogram/filters"
 	"os"
 	"time"
 
 	"github.com/LlamaNite/llamalog"
+	"github.com/er-azh/gogram"
+	"github.com/er-azh/gogram/bindings/td"
+	"github.com/er-azh/gogram/filters"
 )
 
 var log = llamalog.NewLogger("AccountLand")
@@ -22,13 +23,16 @@ func Run() {
 		}
 	}
 
-	client := gogram.New(
+	client := gogram.New()
+
+	checkErr(client.AuthorizeBot(
+		context.Background(),
 		global.Config.TelegramBot.APIID,
 		global.Config.TelegramBot.APIHash,
+		global.Config.TelegramBot.BotToken,
 		global.Config.TelegramBot.CachePath,
-	)
-	checkErr(client.AuthenticateBot(global.Config.TelegramBot.BotToken))
-	info, err := client.GetRawClient().GetMe()
+	))
+	info, err := client.RawClient().GetMe(context.Background())
 	checkErr(err)
 	info.Username = "@" + info.Username
 
@@ -37,7 +41,7 @@ func Run() {
 	registerCommands(client, info.Username)
 
 	// Get channel to make sure about the config file
-	client.GetRawClient().GetChat(global.Config.Itemshop.Channel)
+	client.RawClient().GetChat(context.Background(), global.Config.Itemshop.Channel)
 	log.Info("Chat %d fetched", global.Config.Itemshop.Channel)
 
 	// Start polling with ignoring updates.
@@ -76,15 +80,15 @@ func isAdmin() *filters.FuncFilter {
 	})
 }
 
-func onError(err error, msg *gogram.Message, c *gogram.Client) {
+func onError(err error, ctx gogram.MessageContext) {
 	if err == nil {
 		return
 	}
 
-	msg.Send(c.HTML(fmt.Sprintf(
+	ctx.Send(gogram.Text(fmt.Sprintf(
 		"⚠️| <b>ERROR OCCURED</b>\n\n"+
 			"— <code>%s</code>\n\n"+
 			"✅| Goodluck btw",
 		err.Error(),
-	)))
+	), gogram.TextHTML))
 }

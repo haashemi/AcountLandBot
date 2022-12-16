@@ -10,7 +10,7 @@ import (
 type config struct {
 	TelegramBot struct {
 		CachePath  string  `yaml:"CachePath"`
-		APIID      string  `yaml:"APIID"`
+		APIID      int32   `yaml:"APIID"`
 		APIHash    string  `yaml:"APIHash"`
 		BotToken   string  `yaml:"BotToken"`
 		SuperUsers []int64 `yaml:"SuperUsers"`

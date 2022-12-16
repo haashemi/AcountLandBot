@@ -2,11 +2,11 @@ package bot
 
 import (
 	"accountland/global"
-	"gogram"
-	"gogram/filters"
 	"strconv"
 	"strings"
 
+	"github.com/er-azh/gogram"
+	"github.com/er-azh/gogram/filters"
 	"golang.org/x/text/message"
 )
 
@@ -16,31 +16,32 @@ func registerCommands(client *gogram.Client, username string) {
 	client.OnNewMessage(filters.And(filters.IsPrivate(), filters.Command("/", username, "forcePost")), onForcePost)
 }
 
-func onSetPrice(msg *gogram.Message, c *gogram.Client) {
-	caption := strings.SplitN(msg.GetCaption(), " ", 2)
+func onSetPrice(ctx gogram.MessageContext) {
+	caption := strings.SplitN(ctx.GetCaption(), " ", 2)
 	if len(caption) != 2 {
-		msg.Send(c.HTML(
-			"✅| <b>Set Price command</b>\n\n" +
-				"— <b>Arguments:</b>\n" +
-				"—— <i>Price/V-Bucks</i> <code>(number)</code>\n\n" +
-				"— <b>Example:</b>\n" +
-				"—— <code>/setPrice 120</code>\n\n" +
+		ctx.Send(gogram.Text(
+			"✅| <b>Set Price command</b>\n\n"+
+				"— <b>Arguments:</b>\n"+
+				"—— <i>Price/V-Bucks</i> <code>(number)</code>\n\n"+
+				"— <b>Example:</b>\n"+
+				"—— <code>/setPrice 120</code>\n\n"+
 				"🔥| <i>Developed by Seyyed</i>",
+			gogram.TextHTML,
 		))
 		return
 	}
 
 	newPrice, err := strconv.Atoi(caption[1])
 	if err != nil {
-		onError(err, msg, c)
+		onError(err, ctx)
 	}
 
 	global.Config.Itemshop.PriceLegal = newPrice
 	if err = global.Config.UpdateConfig(); err != nil {
-		onError(err, msg, c)
+		onError(err, ctx)
 	}
 
-	msg.Send(c.HTML(message.NewPrinter(message.MatchLanguage("en")).Sprintf(
+	ctx.Send(gogram.Text(message.NewPrinter(message.MatchLanguage("en")).Sprintf(
 		"✅| <b>PRICES UPDATED</b>\n\n"+
 			"— V-Bucks — Tomans\n"+
 			"💵| <code>200V — %dT</code>\n"+
@@ -58,34 +59,34 @@ func onSetPrice(msg *gogram.Message, c *gogram.Client) {
 		1500*newPrice,
 		1600*newPrice,
 		2000*newPrice,
-	)))
+	), gogram.TextHTML))
 }
 
-func onSetPriceIllegal(msg *gogram.Message, c *gogram.Client) {
-	caption := strings.SplitN(msg.GetCaption(), " ", 2)
+func onSetPriceIllegal(ctx gogram.MessageContext) {
+	caption := strings.SplitN(ctx.GetCaption(), " ", 2)
 	if len(caption) != 2 {
-		msg.Send(c.HTML(
-			"✅| <b>Set Half Legal Price command</b>\n\n" +
-				"— <b>Arguments:</b>\n" +
-				"—— <i>Price/V-Bucks</i> <code>(number)</code>\n\n" +
-				"— <b>Example:</b>\n" +
-				"—— <code>/setPrice 120</code>\n\n" +
+		ctx.Send(gogram.Text(
+			"✅| <b>Set Half Legal Price command</b>\n\n"+
+				"— <b>Arguments:</b>\n"+
+				"—— <i>Price/V-Bucks</i> <code>(number)</code>\n\n"+
+				"— <b>Example:</b>\n"+
+				"—— <code>/setPrice 120</code>\n\n"+
 				"🔥| <i>Developed by Seyyed</i>",
-		))
+			gogram.TextHTML))
 		return
 	}
 
 	newPrice, err := strconv.Atoi(caption[1])
 	if err != nil {
-		onError(err, msg, c)
+		onError(err, ctx)
 	}
 
 	global.Config.Itemshop.PriceIllegal = newPrice
 	if err = global.Config.UpdateConfig(); err != nil {
-		onError(err, msg, c)
+		onError(err, ctx)
 	}
 
-	msg.Send(c.HTML(message.NewPrinter(message.MatchLanguage("en")).Sprintf(
+	ctx.Send(gogram.Text(message.NewPrinter(message.MatchLanguage("en")).Sprintf(
 		"✅| <b>Half Legal PRICES UPDATED</b>\n\n"+
 			"— V-Bucks — Tomans\n"+
 			"💵| <code>200V — %dT</code>\n"+
@@ -103,27 +104,27 @@ func onSetPriceIllegal(msg *gogram.Message, c *gogram.Client) {
 		1500*newPrice,
 		1600*newPrice,
 		2000*newPrice,
-	)))
+	), gogram.TextHTML))
 }
 
-func onForcePost(msg *gogram.Message, c *gogram.Client) {
-	caption := strings.SplitN(msg.GetCaption(), " ", 2)
+func onForcePost(ctx gogram.MessageContext) {
+	caption := strings.SplitN(ctx.GetCaption(), " ", 2)
 	if len(caption) != 2 {
-		msg.Send(c.HTML(
-			"✅| <b>Force Post command</b>\n\n" +
-				"— <b>Arguments:</b>\n" +
-				"—— <i>Target Chat</i>: <code>here / channel</code>\n\n" +
-				"— <b>Example:</b>\n" +
-				"—— <code>/forcePost here</code>\n" +
-				"—— <code>/forcePost channel</code>\n\n" +
+		ctx.Send(gogram.Text(
+			"✅| <b>Force Post command</b>\n\n"+
+				"— <b>Arguments:</b>\n"+
+				"—— <i>Target Chat</i>: <code>here / channel</code>\n\n"+
+				"— <b>Example:</b>\n"+
+				"—— <code>/forcePost here</code>\n"+
+				"—— <code>/forcePost channel</code>\n\n"+
 				"🔥| <i>Developed by Seyyed</i>",
-		))
+			gogram.TextHTML))
 		return
 	}
 
 	switch strings.ToLower(caption[1]) {
 	case "here":
-		tracker.CheckForUpdates(true, msg.SenderID())
+		tracker.CheckForUpdates(true, ctx.SenderID())
 	case "channel":
 		tracker.CheckForUpdates(true, global.Config.Itemshop.Channel)
 	}

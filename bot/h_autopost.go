@@ -4,10 +4,10 @@ import (
 	"accountland/bot/llamahttp"
 	"accountland/global"
 	"bytes"
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"gogram"
 	"image"
 	"image/color"
 	"image/draw"
@@ -20,6 +20,7 @@ import (
 	"github.com/LlamaNite/llamaimage"
 	"github.com/abdullahdiaa/garabic"
 	"github.com/davegardnerisme/deephash"
+	"github.com/er-azh/gogram"
 	"golang.org/x/text/message"
 )
 
@@ -189,33 +190,35 @@ func (main *rawTracker) GenerateIcon(mainImage draw.Image, item ItemShopItem, st
 
 func (main *rawTracker) PostUpdateAlert(itemShopTabs int, target int64) {
 	post, err := main.client.SendMessage(
+		context.Background(),
 		target,
-		main.client.HTML(fmt.Sprintf(
+		gogram.Text(fmt.Sprintf(
 			"✅| <b>ITEMSHOP UPDATED!</b>\n\n"+
 				"📊| <i>TABS COUNT:</i> <code>%d</code>\n"+
 				"🧬| <i>HASH:</i> <code>%s</code>\n\n"+
 				"🔥| <i>developed by Seyyed</i>",
 			itemShopTabs, hex.EncodeToString(main.shopHash),
-		)),
+		), gogram.TextHTML),
 	)
 
 	if err == nil && post != nil {
-		defer main.client.GetRawClient().PinChatMessage(target, post.GetID(), false, false)
+		defer main.client.RawClient().PinChatMessage(context.Background(), target, post.ID(), false, false)
 	}
 }
 
 func (main *rawTracker) PostUpdate(reader io.Reader, tabCount, allTabsCount int, generateTime time.Duration, target int64) {
 	doc := gogram.FileFromReaderWithPattern(reader, "AccountLand-*.png")
 
-	main.client.GetRawClient().GetChat(target)
+	main.client.RawClient().GetChat(context.Background(), target)
 
 	_, err := main.client.SendMessage(
+		context.Background(),
 		target,
 		gogram.Document(
 			doc, nil, gogram.Text(fmt.Sprintf(
 				"> Tab %d/%d\nGenerated in: %v",
 				tabCount, allTabsCount, generateTime,
-			)), false,
+			), gogram.TextHTML), false,
 		),
 	)
 	if err != nil {
