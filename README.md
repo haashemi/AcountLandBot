@@ -6,7 +6,7 @@ This bot is able to generate the images split into multiple tabs of Fortnite's I
 
 > The rewritten version of this bot is built using the [tgo](https://github.com/haashemi/tgo) framework; a ⭐️ would be appreciated.
 
-![20231123_172918](https://github.com/haashemi/AcountLandBot/assets/60406325/563ec873-76cc-49f3-9abb-ba8a20dfe59d)
+![20231123_172918](https://github.com/haashemi/AcountLandBot/assets/60406325/92e23c70-adf6-4909-b791-3e5bdac64beb)
 
 ## Commands:
 
