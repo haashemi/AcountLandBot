@@ -32,6 +32,8 @@ This bot is able to generate the images split into multiple tabs of Fortnite's I
   - Fonts are loaded at `generator/loaders.go` in `loadFonts`
   - Fonts and Titles are generated [here](https://github.com/haashemi/AcountLandBot/blob/3034aa7b4ff77e01f86bc8fa45ee940e7e4db5bd/generator/itemshop.go#L101-L110)
 
+- It only generate images with Outfits and bundles; you can modify it [here](https://github.com/haashemi/AcountLandBot/blob/458265bcaa61d102e778c3bd0ab26c9661b0b661/bot/itemshop.go#L107-L119)
+
 ## Clarification:
 
 This project was initially private-source (December 2021–November 2023), but as priorities changed and time passed, I and the customer (MR. Arya) talked a little and decided to open-source this project after a rewrite. And here is the result!
