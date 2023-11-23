@@ -1,12 +1,12 @@
-TelegramBot:
-  CachePath: ./cache
-  APIID: "XXXXXXX"
-  APIHash: MyAPIHash
-  BotToken: MyBotToken
-  SuperUsers: [682785614, 667442892]
-  Admins: [561812392]
+bot:
+  token: telegram-bot-token
+  admins: [682000000, 682000000, 682000000]
 
-Itemshop:
-  Channel: -1001606477591
-  PriceLegal: 100
-  PriceIllegal: 60
+itemshop:
+  channel: -1001001001001
+  primary_title: ""
+  primary_price: 1
+  primary_currency: V-Bucks
+  secondary_title: "خريد"
+  secondary_price: 60
+  secondary_currency: T # Stands for "Tomans"

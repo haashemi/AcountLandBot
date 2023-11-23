@@ -1,94 +1,55 @@
 package bot
 
 import (
-	"accountland/global"
-	"context"
-	"fmt"
-	"os"
-	"time"
+	"sync"
 
 	"github.com/LlamaNite/llamalog"
-	"github.com/er-azh/gogram"
-	"github.com/er-azh/gogram/bindings/td"
-	"github.com/er-azh/gogram/filters"
+	"github.com/haashemi/AcountLandBot/config"
+	"github.com/haashemi/AcountLandBot/fortnite"
+	"github.com/haashemi/AcountLandBot/generator"
+	"github.com/haashemi/tgo"
+	"github.com/haashemi/tgo/filters"
+	"github.com/haashemi/tgo/routers/message"
 )
 
-var log = llamalog.NewLogger("AccountLand")
+type Client struct {
+	bot       *tgo.Bot
+	log       *llamalog.Logger
+	config    *config.Config
+	generator *generator.Generator
 
-func Run() {
-	checkErr := func(err error) {
-		if err != nil {
-			log.Error(err.Error())
-			os.Exit(1)
-		}
+	shopMut   sync.RWMutex
+	shopHash  []byte
+	shopItems []fortnite.ItemShopItem
+}
+
+func Start(config *config.Config, generator *generator.Generator) {
+	log := llamalog.NewLogger("AKB")
+
+	bot := tgo.NewBot(config.Bot.Token, tgo.Options{DefaultParseMode: tgo.ParseModeHTML})
+	info, err := bot.GetMe()
+	if err != nil {
+		log.Fatal("Failed to fetch the bot info > %v", err)
 	}
 
-	client := gogram.New()
+	client := &Client{bot: bot, log: log, config: config, generator: generator}
+	ms := message.NewRouter(whitelist(config.Bot.Admins))
+	ms.Handle(filters.Command("setpp", info.Username), client.SetPrimaryPrice)
+	ms.Handle(filters.Command("setsp", info.Username), client.SetSecondaryPrice)
+	ms.Handle(filters.Command("itemshop", info.Username), client.Itemshop)
+	bot.AddRouter(ms)
 
-	checkErr(client.AuthorizeBot(
-		context.Background(),
-		global.Config.TelegramBot.APIID,
-		global.Config.TelegramBot.APIHash,
-		global.Config.TelegramBot.BotToken,
-		global.Config.TelegramBot.CachePath,
-	))
-	info, err := client.RawClient().GetMe(context.Background())
-	checkErr(err)
-	info.Username = "@" + info.Username
-
-	tracker = rawTracker{client: client}
-	go tracker.Start()
-	registerCommands(client, info.Username)
-
-	// Get channel to make sure about the config file
-	client.RawClient().GetChat(context.Background(), global.Config.Itemshop.Channel)
-	log.Info("Chat %d fetched", global.Config.Itemshop.Channel)
-
-	// Start polling with ignoring updates.
-	time.Sleep(time.Second)
-	log.Info("Bot is online as %s", info.Username)
-	client.StartPolling()
-}
-
-func isSuperUser() *filters.FuncFilter {
-	return filters.NewFuncFilter(func(update td.Update) bool {
-		if data, ok := update.(*td.UpdateNewMessage); ok {
-			if sender, ok := data.Message.SenderID.(*td.MessageSenderUser); ok {
-				for _, ownerID := range global.Config.TelegramBot.SuperUsers {
-					if sender.UserID == ownerID {
-						return true
-					}
-				}
-			}
-		}
-		return false
-	})
-}
-
-func isAdmin() *filters.FuncFilter {
-	return filters.NewFuncFilter(func(update td.Update) bool {
-		if data, ok := update.(*td.UpdateNewMessage); ok {
-			if sender, ok := data.Message.SenderID.(*td.MessageSenderUser); ok {
-				for _, ownerID := range global.Config.TelegramBot.Admins {
-					if sender.UserID == ownerID {
-						return true
-					}
-				}
-			}
-		}
-		return false
-	})
-}
-
-func onError(err error, ctx gogram.MessageContext) {
-	if err == nil {
-		return
+	_, err = bot.SetMyCommands(&tgo.SetMyCommands{Commands: []*tgo.BotCommand{
+		{Command: "itemshop", Description: "Receive the current itemshop"},
+		{Command: "setpp", Description: "Set primary price"},
+		{Command: "setsp", Description: "Set secondary price"},
+	}})
+	if err != nil {
+		log.Fatal("Failed to set bot commands > %v", err)
 	}
 
-	ctx.Send(gogram.Text(fmt.Sprintf(
-		"⚠️| <b>ERROR OCCURED</b>\n\n"+
-			"— <code>%s</code>\n\n"+
-			"✅| Goodluck btw",
-		err.Error(),
-	), gogram.TextHTML))
+	go client.trackItemShop()
+
+	log.Info("Polling started as @%s", info.Username)
+	log.Fatal("%v", bot.StartPolling(30))
 }

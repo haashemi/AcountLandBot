@@ -1,22 +1,9 @@
-package global
+package generator
 
 import (
-	_ "embed"
-	"image/color"
-
 	"github.com/LlamaNite/llamaimage"
 	"gopkg.in/yaml.v3"
 )
-
-//go:embed assets/colors.yaml
-var colorsConfigFile []byte
-
-type colors struct {
-	DefaultBackground gradientColor
-	Rarities          map[string]gradientColor
-}
-
-type gradientColor struct{ Start, End, Overlay color.RGBA }
 
 type colorsConfig struct {
 	DefaultBackground struct {
@@ -32,52 +19,73 @@ type colorsConfig struct {
 	} `yaml:"rarity_colors"`
 }
 
-func (main *colors) Of(rarity string) gradientColor {
-	if colorData, isExist := main.Rarities[rarity]; isExist {
-		return colorData
+func loadFonts() (*Fonts, error) {
+	fonts := &Fonts{}
+
+	if file, err := assets.ReadFile("assets/fonts/burbank.ttf"); err != nil {
+		return nil, err
+	} else {
+		if fonts.Burbank, err = llamaimage.OpenFont(file); err != nil {
+			return nil, err
+		}
 	}
-	return main.DefaultBackground
+
+	if file, err := assets.ReadFile("assets/fonts/Kalameh-Bold.ttf"); err != nil {
+		return nil, err
+	} else {
+		if fonts.KalamehBold, err = llamaimage.OpenFont(file); err != nil {
+			return nil, err
+		}
+	}
+
+	return fonts, nil
 }
 
-func loadColors(data *colors) error {
+func loadColors() (*Colors, error) {
+	colors := &Colors{}
+	file, err := assets.ReadFile("assets/colors.yaml")
+	if err != nil {
+		return nil, err
+	}
+
 	conf := &colorsConfig{}
-	if err := yaml.Unmarshal(colorsConfigFile, conf); err != nil {
-		return err
+	if err := yaml.Unmarshal(file, conf); err != nil {
+		return nil, err
 	}
 
 	startColor, err := llamaimage.HexToRGBA(conf.DefaultBackground.Start)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	data.DefaultBackground.Start = startColor
+	colors.DefaultBackground.Start = startColor
 
 	endColor, err := llamaimage.HexToRGBA(conf.DefaultBackground.End)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	data.DefaultBackground.End = endColor
+	colors.DefaultBackground.End = endColor
 
-	data.Rarities = map[string]gradientColor{}
+	colors.Rarities = map[string]GradientColor{}
 	for _, colorData := range conf.RarityColors {
 		startColor, err = llamaimage.HexToRGBA(colorData.Start)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		endColor, err = llamaimage.HexToRGBA(colorData.End)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		overlayColor, err := llamaimage.HexToRGBA(colorData.Overlay)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		data.Rarities[colorData.Rarity] = gradientColor{
+		colors.Rarities[colorData.Rarity] = GradientColor{
 			Start:   startColor,
 			End:     endColor,
 			Overlay: overlayColor,
 		}
 	}
 
-	return nil
+	return colors, nil
 }
